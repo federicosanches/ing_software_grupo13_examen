@@ -1,0 +1,27 @@
+{
+    "TC001": {
+        "amount": 15000.0,
+        "payment_method": "tarjeta_credito",
+        "status": "FALLIDO"
+    },
+    "TC002": {
+        "amount": 5000.0,
+        "payment_method": "tarjeta_credito",
+        "status": "REGISTRADO"
+    },
+    "TC003": {
+        "amount": 3000.0,
+        "payment_method": "tarjeta_credito",
+        "status": "FALLIDO"
+    },
+    "PP001": {
+        "amount": 6000.0,
+        "payment_method": "paypal",
+        "status": "FALLIDO"
+    },
+    "PP002": {
+        "amount": 2500.0,
+        "payment_method": "paypal",
+        "status": "PAGADO"
+    }
+}

@@ -68,7 +68,7 @@ class EstadoRegistrado(EstadoPago):
     
     def _validar_pago(self, metodo_pago: str, monto: float) -> bool:
         """
-        Simula la validación del pago según el método seleccionado.
+        Valida el pago según el método seleccionado con las reglas específicas.
         
         Args:
             metodo_pago: Método de pago a validar
@@ -77,21 +77,72 @@ class EstadoRegistrado(EstadoPago):
         Returns:
             bool: True si la validación es exitosa, False en caso contrario
         """
-        # Simulamos diferentes validaciones según el método de pago
-        validaciones = {
-            "tarjeta_credito": 0.85,  # 85% de éxito
-            "tarjeta_debito": 0.90,   # 90% de éxito
-            "paypal": 0.80,           # 80% de éxito
-            "transferencia": 0.95,    # 95% de éxito
-            "efectivo": 1.0           # 100% de éxito
-        }
         
-        # Si el método no está reconocido, usamos una probabilidad baja
-        probabilidad_exito = validaciones.get(metodo_pago.lower(), 0.50)
+        # Método 1: Tarjeta de Crédito
+        if metodo_pago == "tarjeta_credito":
+            # Condición 1: Verifica que el pago sea menor a $10,000
+            if monto >= 10000:
+                print(f"✗ Validación fallida: Monto ${monto:.2f} excede el límite de $10,000 para tarjeta de crédito")
+                return False
+            
+            # Condición 2: Valida que no haya más de 1 pago con este medio en estado REGISTRADO
+            pagos_registrados = self._contar_pagos_registrados_por_metodo("tarjeta_credito")
+            if pagos_registrados >= 1:
+                print(f"✗ Validación fallida: Ya existe {pagos_registrados} pago(s) con tarjeta de crédito en estado REGISTRADO")
+                return False
+            
+            print(f"✓ Validación exitosa para tarjeta de crédito: ${monto:.2f}")
+            return True
         
-        # Validamos también que el monto sea válido
-        if monto <= 0:
+        # Método 2: PayPal
+        elif metodo_pago == "paypal":
+            # Condición: Verifica que el pago sea menor de $5,000
+            if monto >= 5000:
+                print(f"✗ Validación fallida: Monto ${monto:.2f} excede el límite de $5,000 para PayPal")
+                return False
+            
+            print(f"✓ Validación exitosa para PayPal: ${monto:.2f}")
+            return True
+        
+        else:
+            print(f"✗ Método de pago '{metodo_pago}' no reconocido")
             return False
+    
+    def _contar_pagos_registrados_por_metodo(self, metodo_pago: str) -> int:
+        """
+        Cuenta cuántos pagos están en estado REGISTRADO con el método de pago especificado.
         
-        # Simulamos el resultado de la validación
-        return random.random() < probabilidad_exito
+        Args:
+            metodo_pago: Método de pago a contar
+            
+        Returns:
+            int: Número de pagos registrados con ese método
+        """
+        try:
+            # Importar las constantes necesarias
+            from Pago import STATUS, PAYMENT_METHOD, STATUS_REGISTRADO, DATA_PATH
+            import json
+            
+            # Cargar datos del JSON
+            try:
+                with open(DATA_PATH, "r") as f:
+                    content = f.read().strip()
+                    if not content:
+                        return 0
+                    all_data = json.loads(content)
+            except (FileNotFoundError, json.JSONDecodeError):
+                return 0
+            
+            # Contar pagos con el método especificado en estado REGISTRADO
+            contador = 0
+            for pago_data in all_data.values():
+                if (pago_data.get(PAYMENT_METHOD) == metodo_pago and 
+                    pago_data.get(STATUS) == STATUS_REGISTRADO):
+                    contador += 1
+            
+            print(f"ℹ Pagos encontrados con {metodo_pago} en estado REGISTRADO: {contador}")
+            return contador
+            
+        except Exception as e:
+            print(f"⚠ Error contando pagos registrados: {e}")
+            return 0  # En caso de error, asumimos 0 para no bloquear
