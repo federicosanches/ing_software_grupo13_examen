@@ -58,22 +58,45 @@ def save_payment(payment_id, amount, payment_method, status):
     save_payment_data(payment_id, data)
 
 
-""" if __name__ == "__main__":        
-    pago_cargado = Pago.load_from_json("TC001")
-    print(pago_cargado)
-    
-    pago_cargado.pagar()
-    print(pago_cargado) """
-
-# Endpoints a implementar:
-
-# * POST en el path /payments/{payment_id} que registre un nuevo pago.
-# * POST en el path /payments/{payment_id}/update que cambie los parametros de una pago (amount, payment_method)
-# * POST en el path /payments/{payment_id}/pay que intente.
-# * POST en el path /payments/{payment_id}/revert que revertir el pago.
-
 
 # * GET en el path /payments que retorne todos los pagos.
 @app.get("/payments")
 async def get_payments():
     return load_all_payments()
+
+# * GET en el path /payments/{payment_id} que retorne todos los pagos.
+@app.get("/payments/{payment_id}")
+async def get_payment(payment_id: str):
+    pago = Pago.load_from_json(payment_id)
+    return pago.get_info()
+
+
+# * POST en el path /payments/{payment_id} que registre un nuevo pago.
+@app.post("/payments/{payment_id}")
+async def create_payment(payment_id: str, amount: float, payment_method: str):
+    save_payment(payment_id, amount, payment_method, STATUS_REGISTRADO)
+    return {"message": "Payment created successfully"}
+
+
+# * POST en el path /payments/{payment_id}/update que cambie los parametros de una pago (amount, payment_method)
+@app.post("/payments/{payment_id}/update")
+async def update_payment(payment_id: str, amount: float, payment_method: str):
+    pago = Pago.load_from_json(payment_id)
+    pago.actualizar(amount, payment_method)
+    return pago.get_info()
+
+
+# * POST en el path /payments/{payment_id}/pay que intente.
+@app.post("/payments/{payment_id}/pay")
+async def pay_payment(payment_id: str):
+    pago = Pago.load_from_json(payment_id)
+    pago.pagar()
+    return pago.get_info()
+
+
+# * POST en el path /payments/{payment_id}/revert que revertir el pago.
+@app.post("/payments/{payment_id}/revert")
+async def revert_payment(payment_id: str):
+    pago = Pago.load_from_json(payment_id)
+    pago.revertir()
+    return pago.get_info()
