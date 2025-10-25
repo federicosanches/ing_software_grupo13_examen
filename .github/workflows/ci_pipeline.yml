@@ -21,4 +21,4 @@ jobs:
         python -m pip install --upgrade pip
         # No hay dependencias específicas para este ejemplo, pero se incluiría aquí
     - name: Run unit tests
-      run: python -m unittest test.py
+      run: python -m unittest tests.py
