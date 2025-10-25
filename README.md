@@ -16,8 +16,6 @@ Los estados son los siguientes:
 3. **FALLIDO**: Estado de error donde el pago falló durante el procesamiento
 
 
-```
-
 ### 🏗️ Arquitectura del Patrón State
 
 ```
@@ -56,6 +54,8 @@ Los estados son los siguientes:
 
 ### 📊 Matriz de Estados y Transiciones
 
+
+
 | Estado Actual | Pagar | Revertir | Actualizar |
 |---------------|-------|----------|------------|
 | **REGISTRADO** | ✅ → PAGADO/FALLIDO | ≈ Sin efecto | ✅ Permitido |
@@ -66,8 +66,17 @@ Los estados son los siguientes:
 
 ## Tests
 Para correr los tests por linea de comando:
+`
 python -m unittest tests.py
-
+`
+- Se decidió testear principalmente la lógica de cambios de estados para 
+- No se hizo foco en testar tipos de dato de entrada, formato específico del id de pago o medios de pago distintos a los aceptados (Paypal o tarjeta de credito)
 
 ## Deploy
 La aplicacion esta deployeada en el servicio de Render en https://ing-software-practica-examen-grupo13.onrender.com/docs
+
+Para correr localmente el código en windows usar 
+
+`
+python -m uvicorn main:app --reload
+`
