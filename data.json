@@ -1,32 +1,17 @@
 {
-    "TC001": {
-        "amount": 100.0,
-        "payment_method": "paypal",
+    "1": {
+        "amount": 111.0,
+        "payment_method": "tarjeta_credito",
         "status": "REGISTRADO"
     },
-    "TC002": {
+    "2": {
         "amount": 100.0,
         "payment_method": "paypal",
         "status": "PAGADO"
     },
-    "TC003": {
-        "amount": 3000.0,
+    "3": {
+        "amount": 100000.0,
         "payment_method": "tarjeta_credito",
-        "status": "FALLIDO"
-    },
-    "PP001": {
-        "amount": 6000.0,
-        "payment_method": "paypal",
-        "status": "FALLIDO"
-    },
-    "PP002": {
-        "amount": 2500.0,
-        "payment_method": "paypal",
-        "status": "PAGADO"
-    },
-    "123": {
-        "amount": 111.0,
-        "payment_method": "paypal",
         "status": "REGISTRADO"
     }
 }
