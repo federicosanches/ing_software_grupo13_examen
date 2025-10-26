@@ -1,6 +1,9 @@
 from EstadoPago import EstadoPago
+from EstadoPagado import EstadoPagado
+from EstadoFallido import EstadoFallido
 from typing import TYPE_CHECKING
-import random
+from utils import STATUS, PAYMENT_METHOD, STATUS_REGISTRADO, DATA_PATH
+import json
 
 if TYPE_CHECKING:
     from Pago import Pago
@@ -11,25 +14,24 @@ class EstadoRegistrado(EstadoPago):
     Estado REGISTRADO - El pago fue registrado pero aún no procesado.
     Permite: pagar, revertir (sin efecto), actualizar
     """
-    
+    def __init__(self, pago):
+        self.pago = pago
+
     def pagar(self, pago: 'Pago') -> bool:
         """
         Procesa el pago y cambia al estado PAGADO o FALLIDO según la validación.
         """
-        print(f"Procesando pago {pago.id} con método {pago.metodo_pago}...")
+        print(f"Procesando pago {pago.id} con método {pago.data['payment_method']}...")
         
-        # Simulamos la validación del método de pago
-        es_valido = self._validar_pago(pago.metodo_pago, pago.monto)
+        es_valido = self._validar_pago(pago.data['payment_method'], pago.data['amount'])
         
         if es_valido:
             print(f"✓ Pago {pago.id} procesado exitosamente")
-            from EstadoPagado import EstadoPagado
-            pago._cambiar_estado(EstadoPagado())
+            pago._cambiar_estado(EstadoPagado(pago))
             return True
         else:
             print(f"✗ Error al procesar el pago {pago.id}")
-            from EstadoFallido import EstadoFallido
-            pago._cambiar_estado(EstadoFallido())
+            pago._cambiar_estado(EstadoFallido(pago))
             return False
     
     def revertir(self, pago: 'Pago') -> bool:
@@ -46,13 +48,13 @@ class EstadoRegistrado(EstadoPago):
         cambios_realizados = []
         
         if nuevo_monto is not None and nuevo_monto > 0:
-            monto_anterior = pago.monto
-            pago.monto = nuevo_monto
+            monto_anterior = pago.data['amount']
+            pago.data['amount'] = nuevo_monto
             cambios_realizados.append(f"monto: ${monto_anterior:.2f} → ${nuevo_monto:.2f}")
         
         if nuevo_metodo is not None:
-            metodo_anterior = pago.metodo_pago
-            pago.metodo_pago = nuevo_metodo
+            metodo_anterior = pago.data['payment_method']
+            pago.data['payment_method'] = nuevo_metodo
             cambios_realizados.append(f"método: {metodo_anterior} → {nuevo_metodo}")
         
         if cambios_realizados:
@@ -119,10 +121,6 @@ class EstadoRegistrado(EstadoPago):
             int: Número de pagos registrados con ese método
         """
         try:
-            # Importar las constantes necesarias
-            from Pago import STATUS, PAYMENT_METHOD, STATUS_REGISTRADO, DATA_PATH
-            import json
-            
             # Cargar datos del JSON
             try:
                 with open(DATA_PATH, "r") as f:

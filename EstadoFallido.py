@@ -11,6 +11,8 @@ class EstadoFallido(EstadoPago):
     Permite: revertir (vuelve a REGISTRADO)
     No permite: pagar (debe revertirse primero), actualizar
     """
+    def __init__(self, pago):
+        self.pago = pago
     
     def pagar(self, pago: 'Pago') -> bool:
         """
@@ -27,7 +29,7 @@ class EstadoFallido(EstadoPago):
         """
         print(f"↺ Revirtiendo pago {pago.id} de FALLIDO a REGISTRADO...")
         from EstadoRegistrado import EstadoRegistrado
-        pago._cambiar_estado(EstadoRegistrado())
+        pago._cambiar_estado(EstadoRegistrado(pago))
         print(f"✓ Pago {pago.id} revertido exitosamente. Ahora puede ser procesado nuevamente.")
         return True
     

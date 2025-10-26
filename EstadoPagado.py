@@ -11,7 +11,9 @@ class EstadoPagado(EstadoPago):
     No permite: pagar (ya está pagado), revertir, actualizar
     Es un estado final.
     """
-    
+    def __init__(self, pago):
+        self.pago = pago
+        
     def pagar(self, pago: 'Pago') -> bool:
         """
         No se puede pagar un pago que ya está en estado PAGADO.

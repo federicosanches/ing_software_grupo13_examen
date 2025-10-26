@@ -2,7 +2,7 @@ import unittest
 import os
 import json
 from Pago import Pago
-import Pago as PagoModule
+import utils as PagoModule
 
 
 # Usamos un archivo específico para los tests llamado data_tests.json
@@ -36,67 +36,73 @@ class TestPagoState(unittest.TestCase):
 
     def test_crear_pago_registrado(self):
         """Crear un pago con auto_save=False debe quedar en REGISTRADO y mantener datos."""
-        pago = Pago("T1", 100.0, "paypal", auto_save=False)
+        # Create using current Pago signature (id, amount, payment_method)
+        pago = Pago("T1", 100.0, "paypal")
         self.assertEqual(pago.get_estado(), "REGISTRADO")
-        self.assertEqual(pago.monto, 100.0)
-        self.assertEqual(pago.metodo_pago, "paypal")
+        # Payment values are stored in pago.data
+        self.assertEqual(pago.data['amount'], 100.0)
+        self.assertEqual(pago.data['payment_method'], "paypal")
 
     def test_pago_exitoso_paypal_becomes_pagado(self):
         """Un pago con PayPal y monto válido debe procesarse y quedar PAGADO."""
-        pago = Pago("T2", 100.0, "paypal", auto_save=False)
-        resultado = pago.pagar()
-        self.assertTrue(resultado)
+        pago = Pago("T2", 100.0, "paypal")
+        # pagar() does not return a value from the Pago wrapper; check state after calling
+        pago.pagar()
         self.assertEqual(pago.get_estado(), "PAGADO")
 
     def test_pago_fallido_y_revertir(self):
         """Un pago con tarjeta_credito y monto alto debe FALLAR y poder revertirse a REGISTRADO."""
-        pago = Pago("T3", 15000.0, "tarjeta_credito", auto_save=False)
-        resultado = pago.pagar()
-        self.assertFalse(resultado)
+        pago = Pago("T3", 15000.0, "tarjeta_credito")
+        pago.pagar()
         self.assertEqual(pago.get_estado(), "FALLIDO")
 
         # Revertir debe devolver al estado REGISTRADO
-        revertido = pago.revertir()
-        self.assertTrue(revertido)
+        pago.revertir()
         self.assertEqual(pago.get_estado(), "REGISTRADO")
 
     def test_no_actualizar_fallido_y_pagado(self):
         """No se debe poder actualizar un pago en estado FALLIDO ni en PAGADO."""
         # FALLIDO
-        pago_f = Pago("F1", 15000.0, "tarjeta_credito", auto_save=False)
+        pago_f = Pago("F1", 15000.0, "tarjeta_credito")
         pago_f.pagar()
         self.assertEqual(pago_f.get_estado(), "FALLIDO")
-        self.assertFalse(pago_f.actualizar(nuevo_monto=14000.0))
+        # actualizar doesn't return through Pago wrapper; calling it should not change data
+        pago_f.actualizar(amount=14000.0)
+        self.assertEqual(pago_f.data['amount'], 15000.0)
 
         # PAGADO
-        pago_p = Pago("P1", 100.0, "paypal", auto_save=False)
-        self.assertTrue(pago_p.pagar())
+        pago_p = Pago("P1", 100.0, "paypal")
+        pago_p.pagar()
         self.assertEqual(pago_p.get_estado(), "PAGADO")
-        self.assertFalse(pago_p.actualizar(nuevo_monto=200.0))
+        pago_p.actualizar(amount=200.0)
+        # amount should remain unchanged for PAGADO
+        self.assertEqual(pago_p.data['amount'], 100.0)
 
     def test_no_revertir_pagado(self):
         """Un pago en estado PAGADO no debe poder revertirse."""
-        pago = Pago("P2", 100.0, "paypal", auto_save=False)
+        pago = Pago("P2", 100.0, "paypal")
         pago.pagar()
         self.assertEqual(pago.get_estado(), "PAGADO")
-        self.assertFalse(pago.revertir())
+        # revertir should not change state for PAGADO
+        pago.revertir()
+        self.assertEqual(pago.get_estado(), "PAGADO")
 
     def test_flujo_revertir_actualizar_y_pagar(self):
         """Flujo completo: FALLIDO -> revertir -> actualizar monto -> pagar (exitoso)."""
-        pago = Pago("FLOW1", 15000.0, "tarjeta_credito", auto_save=False)
+        pago = Pago("FLOW1", 15000.0, "tarjeta_credito")
         # falla inicialmente
-        self.assertFalse(pago.pagar())
+        pago.pagar()
         self.assertEqual(pago.get_estado(), "FALLIDO")
 
         # revertir a REGISTRADO
-        self.assertTrue(pago.revertir())
+        pago.revertir()
         self.assertEqual(pago.get_estado(), "REGISTRADO")
 
         # actualizar a monto válido
-        self.assertTrue(pago.actualizar(nuevo_monto=5000.0))
+        pago.actualizar(amount=5000.0)
 
         # intentar pagar de nuevo y que pase
-        self.assertTrue(pago.pagar())
+        pago.pagar()
         self.assertEqual(pago.get_estado(), "PAGADO")
 
 
